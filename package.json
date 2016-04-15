@@ -1,35 +1,31 @@
 {
-  "name": "exp-fake-amqp",
-  "description": "Stubbing AMQP",
+  "name": "exp-fake-amqplib",
+  "description": "Stubbing amqplib",
   "version": "1.3.0",
   "author": "AB Kvällstidningen Expressen",
   "contributors": [
-    "Anders Kindberg <ndrsbngtssn@yahoo.se>",
-    "Gabriel Falkenberg <gabriel.falkenberg@gmail.com>",
-    "Jens Carlén",
-    "Joel Abrahamsson <mail@joelabrahamsson.com>",
-    "Pål Edman"
+    "Mattias Norlander"
   ],
   "scripts": {
     "test": "mocha --reporter spec"
   },
   "main": "index.js",
-  "repository": "git://github.com/ExpressenAB/exp-fake-amqp.git",
+  "repository": "git://github.com/ExpressenAB/exp-fake-amqplib.git",
   "keywords": [
+    "amqplib",
     "amqp",
+    "node",
     "mock",
     "test"
   ],
   "license": {
     "type": "MIT",
-    "url": "http://github.com/ExpressenAB/exp-fake-amqp/raw/master/LICENSE"
+    "url": "http://github.com/ExpressenAB/exp-fake-amqplib/raw/master/LICENSE"
   },
   "dependencies": {
-    "bluebird": "^2.3.10",
     "lodash": "^4.10.0"
   },
   "devDependencies": {
-    "chai": "^1.9.2",
     "mocha": "^2.0.1"
   },
   "files": [
