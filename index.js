@@ -5,7 +5,11 @@ var assert = require("assert");
 var exchanges = {};
 var queues = {};
 
-function connect(url, connCallback) {
+function connect(url, options, connCallback) {
+  if (!connCallback) {
+    options = {};
+    connCallback = options;
+  }
   var createChannel = function (channelCallback) {
 
     var channel = {
@@ -20,13 +24,16 @@ function connect(url, connCallback) {
       },
 
       bindQueue: function (queue, exchange, key, args, bindCallback) {
+        bindCallback = bindCallback || console.err;
+        if(!exchanges[exchange]) return bindcallback("Bind to non-existing exchange " + exchange);
         var re = "^" + key.replace(".", "\\.").replace("#", "(\\w|\\.)+").replace("*", "\\w+") + "$";
-        assert(exchanges[exchange], "Bind to non-existing exchange " + exchange);
         exchanges[exchange].bindings.push({regex: new RegExp(re), queueName: queue});
         bindCallback();
       },
 
       publish: function (exchange, routingKey, content, props, pubCallback) {
+        pubCallback = pubCallback || console.err;
+        if(!exchanges[exchange]) return pubCallback("Publish to non-existing exchange " + exchange);
         var bindings = exchanges[exchange].bindings;
         var matchingBindings = bindings.filter(function (b) {return b.regex.test(routingKey)});
         matchingBindings.forEach(function (binding) {
@@ -55,11 +62,12 @@ function connect(url, connCallback) {
       on: function() {}
     };
     channelCallback(null, channel);
-  }
+  };
 
   var connection = {
     createChannel: createChannel,
-    createConfirmChannel: createChannel
+    createConfirmChannel: createChannel,
+    on: function() {}
   };
 
   connCallback(null, connection);
@@ -70,7 +78,7 @@ function resetMock() {
   setImmediate(function () {
     queues = {};
     exchanges = {};
-  })
+  });
 }
 
 module.exports = {connect: connect, resetMock: resetMock};
