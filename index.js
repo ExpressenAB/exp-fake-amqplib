@@ -14,6 +14,7 @@ function connect(url, options, connCallback) {
 
     var channel = {
       assertQueue: function (queue, options, qCallback) {
+        qCallback = qCallback || function() {};
         setIfUndef(queues, queue, {messages: [], subscribers: [], options: options});
         qCallback();
       },
@@ -24,8 +25,8 @@ function connect(url, options, connCallback) {
       },
 
       bindQueue: function (queue, exchange, key, args, bindCallback) {
-        bindCallback = bindCallback || console.err;
-        if(!exchanges[exchange]) return bindcallback("Bind to non-existing exchange " + exchange);
+        bindCallback = bindCallback || console.error;
+        if(!exchanges[exchange]) return bindCallback("Bind to non-existing exchange " + exchange);
         var re = "^" + key.replace(".", "\\.").replace("#", "(\\w|\\.)+").replace("*", "\\w+") + "$";
         exchanges[exchange].bindings.push({regex: new RegExp(re), queueName: queue});
         bindCallback();
