@@ -26,7 +26,10 @@
     "lodash": "^4.10.0"
   },
   "devDependencies": {
-    "mocha": "^2.0.1"
+    "exp-amqp-connection": "^2.1.2",
+    "mocha": "^3.1.2",
+    "proxyquire": "^1.7.10",
+    "should": "^11.1.1"
   },
   "files": [
     "index.js",
