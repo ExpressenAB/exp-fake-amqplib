@@ -73,22 +73,12 @@ function connect(url, options, connCallback) {
 
 }
 
-function resetMockImmediate(cb) {
-  setImmediate(function () {
-    queues = {};
-    exchanges = {};
-    if (cb) {
-      cb();
-    }
-  });
-}
-
 function resetMock() {
   queues = {};
   exchanges = {};
 }
 
-module.exports = {connect: connect, resetMock: resetMock, resetMockImmediate: resetMockImmediate};
+module.exports = {connect: connect, resetMock: resetMock};
 
 function setIfUndef(object, prop, value) {
   if (!object[prop]) {
