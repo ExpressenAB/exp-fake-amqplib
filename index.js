@@ -17,8 +17,12 @@ function connect(url, options, connCallback) {
         qCallback();
       },
 
-      assertExchange: function (exchange, exchOptions, exchCallback) {
-        setIfUndef(exchanges, exchange, {bindings: [], options: exchOptions});
+      assertExchange: function (exchange, type, exchOptions, exchCallback) {
+        if (typeof (exchOptions) === "function") {
+          exchCallback = exchOptions;
+          exchOptions = {};
+        }
+        setIfUndef(exchanges, exchange, {bindings: [], options: exchOptions, type: type});
         return exchCallback && exchCallback();
       },
 
