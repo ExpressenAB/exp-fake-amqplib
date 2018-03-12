@@ -62,9 +62,6 @@ function connect(url, options, connCallback) {
       ack: function () {},
       nack: function () {},
       prefetch: function () {},
-      close: function (cb) {
-        return cb && cb()
-      },
       on: function () {}
     };
     channelCallback(null, channel);
@@ -73,6 +70,9 @@ function connect(url, options, connCallback) {
   var connection = {
     createChannel: createChannel,
     createConfirmChannel: createChannel,
+    close: function (cb) {
+      return cb && cb()
+    },
     on: function () {}
   };
 
