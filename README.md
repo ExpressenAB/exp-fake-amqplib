@@ -1,5 +1,7 @@
 ## exp-fake-amqplib
 
+[![Build Status](https://travis-ci.org/ExpressenAB/exp-fake-amqplib.svg?branch=master)](https://travis-ci.org/ExpressenAB/exp-fake-amqplib)[![dependencies Status](https://david-dm.org/ExpressenAB/exp-fake-amqplib/status.svg)](https://david-dm.org/ExpressenAB/exp-fake-amqplib)
+
 Mocked version of https://www.npmjs.com/package/amqplib.
 Currently only supports the callback API.
 
