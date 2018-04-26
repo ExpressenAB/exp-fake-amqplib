@@ -1,0 +1,21 @@
+{
+  "extends": "../.eslintrc.json",
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "no-unused-expressions": 0
+  },
+  "globals": {
+    "Feature": false,
+    "Scenario": false,
+    "Given": false,
+    "When": false,
+    "Then": false,
+    "And": false,
+    "But": false,
+    "document": false,
+    "XPathResult": false,
+    "expect": false
+  }
+}
