@@ -25,6 +25,9 @@
     "type": "MIT",
     "url": "http://github.com/ExpressenAB/exp-fake-amqplib/raw/master/LICENSE"
   },
+  "dependencies": {
+    "lodash": "^4.10.0"
+  },
   "devDependencies": {
     "chai": "^4.1.2",
     "eslint": "^4.19.1",
