@@ -3,8 +3,6 @@
 let exchanges = {};
 let queues = {};
 
-module.exports = {connect, resetMock};
-
 function connect(url, options, connCallback) {
   if (!connCallback) {
     options = {};
@@ -103,3 +101,5 @@ function setIfUndef(object, prop, value) {
     object[prop] = value;
   }
 }
+
+module.exports = {connect: connect, resetMock: resetMock};
