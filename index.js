@@ -52,7 +52,7 @@ function connect(url, options, connCallback) {
     function bindQueue(queue, exchange, key, args, bindCallback) {
       bindCallback = bindCallback || function () {};
       if (!exchanges[exchange]) return bindCallback("Bind to non-existing exchange " + exchange);
-      const re = "^" + key.replace(".", "\\.").replace("#", "(\\w|\\.)+").replace("*", "\\w+") + "$";
+      const re = "^" + quoteRegexp(key).replace(/#/g, ".+").replace(/\*/g, "[^\\.]+") + "$";
       exchanges[exchange].bindings.push({regex: new RegExp(re), queueName: queue});
       bindCallback();
     }
@@ -87,6 +87,10 @@ function connect(url, options, connCallback) {
     function prefetch() {}
     function on() {}
   }
+}
+
+function quoteRegexp(str) {
+  return (str + "").replace(/[.?+^$[\]\\(){}|-]/g, "\\$&");
 }
 
 function resetMock() {
