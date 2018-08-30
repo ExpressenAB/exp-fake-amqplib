@@ -23,5 +23,5 @@ you can use [mock-require](https://www.npmjs.com/package/mock-require) to replac
 const mock = require("mock-require");
 const fakeAmqp = require("exp-fake-amqplib");
 
-mock("amqplib/callback_api": fakeAmqp);
+mock("amqplib/callback_api", fakeAmqp);
 ```
