@@ -17,12 +17,11 @@ amqplib.connect = fakeAmqp.connect;
 ```
 
 If you are using version 2 or higher of [exp-amqp-connection](https://www.npmjs.com/package/exp-amqp-connection)
-you can use [proxyquire](https://www.npmjs.com/package/proxyquire) to replace `amqplib` with `exp-fake-amqplib` in your tests like this:
+you can use [mock-require](https://www.npmjs.com/package/mock-require) to replace `amqplib` with `exp-fake-amqplib` in your tests like this:
 
 ```javascript
+const mock = require("mock-require");
 const fakeAmqp = require("exp-fake-amqplib");
 
-proxyquire("exp-amqp-connection/bootstrap", {
-  "amqplib/callback_api": fakeAmqp
-});
+mock("amqplib/callback_api": fakeAmqp);
 ```
