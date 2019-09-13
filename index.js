@@ -1,104 +1,108 @@
 "use strict";
 
-let exchanges = {};
-let queues = {};
+const {Broker} = require("smqp");
 
-module.exports = {connect, resetMock};
+module.exports = Fake();
 
-function connect(url, options, connCallback) {
-  if (!connCallback) {
-    options = {};
-    connCallback = options;
-  }
-
-  const connection = {
-    createChannel: createChannel(false),
-    createConfirmChannel: createChannel(true),
-    on: function () {},
-    close: resetMock,
+function Fake() {
+  const connections = [];
+  return {
+    resetMock,
+    connect,
   };
 
-  return connCallback(null, connection);
+  function connect(...args) {
+    const connection = Connection(...args);
+    connections.push(connection);
+    return resolveOrCallback(args.pop(), null, connection);
+  }
 
-  function createChannel(confirm) {
-    return (channelCallback) => {
-      channelCallback(null, {
-        assertQueue,
-        assertExchange,
-        bindQueue,
-        publish,
-        consume,
-        deleteQueue,
-        ack,
-        nack,
-        prefetch,
-        on,
-      });
+  function resetMock() {
+    for (const connection of connections) {
+      connection.close();
+    }
+  }
 
-      function assertQueue(queue, qOptions, qCallback) {
-        qCallback = qCallback || function () {};
-        setIfUndef(queues, queue, {messages: [], subscribers: [], options: qOptions});
-        qCallback();
-      }
+  function Connection() {
+    const broker = Broker();
 
-      function assertExchange(exchange, type, exchOptions, exchCallback) {
-        if (typeof (exchOptions) === "function") {
-          exchCallback = exchOptions;
-          exchOptions = {};
-        }
-        setIfUndef(exchanges, exchange, {bindings: [], options: exchOptions, type: type});
-        return exchCallback && exchCallback();
-      }
+    connections.push(broker);
 
-      function bindQueue(queue, exchange, key, args, bindCallback) {
-        bindCallback = bindCallback || function () {};
-        if (!exchanges[exchange]) return bindCallback("Bind to non-existing exchange " + exchange);
-        const re = "^" + key.replace(".", "\\.").replace("#", "(\\S)+").replace("*", "\\w+") + "$";
-        exchanges[exchange].bindings.push({regex: new RegExp(re), queueName: queue});
-        bindCallback();
-      }
-
-      function publish(exchange, routingKey, content, props, pubCallback) {
-        pubCallback = pubCallback || function () {};
-        if (!exchanges[exchange]) return pubCallback("Publish to non-existing exchange " + exchange);
-        const bindings = exchanges[exchange].bindings;
-        const matchingBindings = bindings.filter((b) => b.regex.test(routingKey));
-        matchingBindings.forEach((binding) => {
-          const subscribers = queues[binding.queueName] ? queues[binding.queueName].subscribers : [];
-          subscribers.forEach((sub) => {
-            const message = {fields: {routingKey: routingKey}, properties: props, content: content};
-            sub(message);
-          });
-        });
-        if (confirm) pubCallback();
-        return true;
-      }
-
-      function consume(queue, handler) {
-        queues[queue].subscribers.push(handler);
-      }
-
-      function deleteQueue(queue) {
-        setImmediate(() => {
-          delete queues[queue];
-        });
-      }
-
-      function ack() {}
-      function nack() {}
-      function prefetch() {}
-      function on() {}
+    return {
+      _broker: broker,
+      createChannel(...args) {
+        return resolveOrCallback(args.pop(), null, Channel(broker));
+      },
+      createConfirmChannel(...args) {
+        return resolveOrCallback(args.pop(), null, Channel(broker, true));
+      },
+      close() {
+        broker.reset();
+      },
+      on() {},
     };
   }
-}
 
-function resetMock() {
-  queues = {};
-  exchanges = {};
-}
+  function Channel(broker, confirm) {
+    return {
+      assertExchange(...args) {
+        return callBroker(broker.assertExchange, ...args);
+      },
+      assertQueue(...args) {
+        return callBroker(broker.assertQueue, ...args);
+      },
+      bindQueue(...args) {
+        return callBroker(broker.bindQueue, ...args);
+      },
+      deleteQueue(...args) {
+        return callBroker(broker.deleteQueue, ...args);
+      },
+      publish(exchange, routingKey, content, ...args) {
+        return confirm ? broker.publish(exchange, routingKey, content, ...args) : callBroker(broker.publish, exchange, routingKey, content, ...args);
+      },
+      sendToQueue(...args) {
+        return confirm ? broker.sendToQueue(...args) : callBroker(broker.sendToQueue, ...args);
+      },
+      consume(queue, onMessage, ...args) {
+        const passArgs = args.length ? args : [{}];
+        return callBroker(broker.consume, queue, onMessage && handler, ...passArgs);
+        function handler(_, msg) {
+          onMessage(msg);
+        }
+      },
+      cancel(...args) {
+        return callBroker(broker.cancel, ...args);
+      },
+      ack: broker.ack,
+      ackAll: broker.ackAll,
+      nack: broker.nack,
+      reject: broker.reject,
+      nackAll: broker.nackAll,
+      prefetch() {},
+      on: broker.on,
+    };
 
-function setIfUndef(object, prop, value) {
-  if (!object[prop]) {
-    object[prop] = value;
+    function callBroker(fn, ...args) {
+      let [poppedCb] = args.slice(-1);
+      if (typeof poppedCb === "function") args.splice(-1);
+      else poppedCb = null;
+
+      return new Promise((resolve, reject) => {
+        try {
+          const result = fn(...args);
+          if (poppedCb) poppedCb(null, result);
+          return resolve(result);
+        } catch (err) {
+          if (!poppedCb) return reject(err);
+          poppedCb(err);
+          return resolve();
+        }
+      });
+    }
   }
+}
+
+function resolveOrCallback(optionalCb, err, ...args) {
+  if (typeof optionalCb === "function") optionalCb(err, ...args);
+  return Promise.resolve(...args);
 }

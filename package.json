@@ -26,12 +26,15 @@
     "url": "http://github.com/ExpressenAB/exp-fake-amqplib/raw/master/LICENSE"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.4.0",
-    "mocha": "^5.2.0"
+    "chai": "^4.2.0",
+    "eslint": "^6.3.0",
+    "mocha": "^6.2.0"
   },
   "files": [
     "index.js",
     "LICENSE"
-  ]
+  ],
+  "dependencies": {
+    "smqp": "^1.9.0"
+  }
 }
