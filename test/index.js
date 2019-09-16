@@ -1,10 +1,10 @@
 "use strict";
 
-const {connect, resetMock} = require("..");
+const {connect, resetMock, connections} = require("..");
 const {expect} = require("chai");
 
 describe("fake amqplib", () => {
-  describe(".connect()", () => {
+  describe(".connect([amqpUrl])", () => {
     it("exposes the expected api on connection", (done) => {
       connect("amqp://localhost", null, (err, connection) => {
         if (err) return done(err);
@@ -14,6 +14,33 @@ describe("fake amqplib", () => {
         expect(connection).have.property("on").that.is.a("function");
         done();
       });
+    });
+
+    it("connection with the same amqpUrl shares broker", async () => {
+      const conn1 = await connect("amqp://testrabbit:5672");
+      const conn2 = await connect("amqp://testrabbit:5672");
+
+      expect(conn1._broker === conn2._broker).to.be.true;
+    });
+
+    it("connection with different amqpUrls has different brokers", async () => {
+      const conn1 = await connect("amqp://testrabbit:5672");
+      const conn2 = await connect("amqp://testrabbit:15672");
+
+      expect(conn1._broker === conn2._broker).to.be.false;
+    });
+
+    it("exposes connection list", async () => {
+      const conn1 = await connect("amqp://localhost:5672");
+      const conn2 = await connect("amqp://localhost:15672");
+      expect(connections).to.have.length.above(2).and.include.members([conn1, conn2]);
+    });
+
+    it("connection.close() removes connection from list", async () => {
+      const conn = await connect("amqp://testrabbit:5672");
+      expect(connections).to.include(conn);
+
+      conn.close();
     });
   });
 
@@ -144,7 +171,7 @@ describe("fake amqplib", () => {
   });
 
   describe("resetMock", () => {
-    it("clears messages in queueus and removes non-durable enteties", async () => {
+    it("clears queues, exchanges, and consumers", async () => {
       const connection = await connect("amqp://localhost:15672");
       const channel = await connection.createChannel();
       await channel.assertExchange("event", "topic", {durable: true, autoDelete: false});

@@ -2,42 +2,47 @@
 
 const {Broker} = require("smqp");
 
+const connections = [];
+
 module.exports = Fake();
 
 function Fake() {
-  const connections = [];
   return {
+    connections,
     resetMock,
     connect,
   };
 
-  function connect(...args) {
-    const connection = Connection(...args);
+  function connect(amqpUrl, ...args) {
+    const {_broker} = connections.find((conn) => conn.options[0] === amqpUrl) || {};
+    const broker = _broker || Broker();
+    const connection = Connection(broker, amqpUrl, ...args);
     connections.push(connection);
-    return resolveOrCallback(args.pop(), null, connection);
+    return resolveOrCallback(args.slice(-1)[0], null, connection);
   }
 
   function resetMock() {
-    for (const connection of connections) {
+    for (const connection of connections.slice()) {
       connection.close();
     }
   }
 
-  function Connection() {
-    const broker = Broker();
-
-    connections.push(broker);
-
+  function Connection(broker, ...connArgs) {
+    const options = connArgs.filter((a) => typeof a !== "function");
     return {
       _broker: broker,
+      options,
       createChannel(...args) {
-        return resolveOrCallback(args.pop(), null, Channel(broker));
+        return resolveOrCallback(args.slice(-1)[0], null, Channel(broker));
       },
       createConfirmChannel(...args) {
-        return resolveOrCallback(args.pop(), null, Channel(broker, true));
+        return resolveOrCallback(args.slice(-1)[0], null, Channel(broker, true));
       },
-      close() {
+      close(...args) {
+        const idx = connections.indexOf(this);
+        if (idx > -1) connections.splice(idx, 1);
         broker.reset();
+        return resolveOrCallback(args.slice(-1)[0], null, Channel(broker, true));
       },
       on() {},
     };

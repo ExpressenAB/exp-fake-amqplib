@@ -7,7 +7,7 @@
     "Mattias Norlander"
   ],
   "scripts": {
-    "test": "mocha --reporter spec && eslint . --cache"
+    "test": "mocha -R spec -t 1000 && eslint . --cache"
   },
   "main": "index.js",
   "engines": {
