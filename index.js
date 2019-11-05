@@ -29,6 +29,7 @@ function Fake() {
 
   function Connection(broker, ...connArgs) {
     const options = connArgs.filter((a) => typeof a !== "function");
+
     return {
       _broker: broker,
       options,
@@ -42,7 +43,7 @@ function Fake() {
         const idx = connections.indexOf(this);
         if (idx > -1) connections.splice(idx, 1);
         broker.reset();
-        return resolveOrCallback(args.slice(-1)[0], null, Channel(broker, true));
+        return resolveOrCallback(args.slice(-1)[0]);
       },
       on() {},
     };
@@ -63,10 +64,12 @@ function Fake() {
         return callBroker(broker.deleteQueue, ...args);
       },
       publish(exchange, routingKey, content, ...args) {
-        return confirm ? broker.publish(exchange, routingKey, content, ...args) : callBroker(broker.publish, exchange, routingKey, content, ...args);
+        if (!Buffer.isBuffer(content)) throw new TypeError("content is not a buffer");
+        return confirm ? callBroker(broker.publish, exchange, routingKey, content, ...args) : broker.publish(exchange, routingKey, content, ...args);
       },
-      sendToQueue(...args) {
-        return confirm ? broker.sendToQueue(...args) : callBroker(broker.sendToQueue, ...args);
+      sendToQueue(queue, content, ...args) {
+        if (!Buffer.isBuffer(content)) throw new TypeError("content is not a buffer");
+        return confirm ? callBroker(broker.sendToQueue, queue, content, ...args) : broker.sendToQueue(queue, content, ...args);
       },
       consume(queue, onMessage, ...args) {
         const passArgs = args.length ? args : [{}];

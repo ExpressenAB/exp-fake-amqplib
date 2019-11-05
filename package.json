@@ -7,7 +7,8 @@
     "Mattias Norlander"
   ],
   "scripts": {
-    "test": "mocha -R spec -t 1000 && eslint . --cache"
+    "test": "mocha -R spec -t 1000",
+    "posttest": "eslint . --cache"
   },
   "main": "index.js",
   "engines": {
@@ -27,14 +28,14 @@
   },
   "devDependencies": {
     "chai": "^4.2.0",
-    "eslint": "^6.3.0",
-    "mocha": "^6.2.0"
+    "eslint": "^6.7.2",
+    "mocha": "^6.2.2"
   },
   "files": [
     "index.js",
     "LICENSE"
   ],
   "dependencies": {
-    "smqp": "^1.9.0"
+    "smqp": "^2.1.1"
   }
 }

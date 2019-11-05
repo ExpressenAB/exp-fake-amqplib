@@ -156,7 +156,7 @@ describe("fake amqplib", () => {
 
       let onMessageArgs;
 
-      await channel.publish("consume", "test", {data: 1});
+      await channel.publish("consume", "test", Buffer.from(JSON.stringify({data: 1})));
 
       expect(onMessageArgs, "message arguments").to.be.ok;
       expect(onMessageArgs.length).to.equal(1);
@@ -167,6 +167,88 @@ describe("fake amqplib", () => {
       function onMessage(...args) {
         onMessageArgs = args;
       }
+    });
+  });
+
+  describe("publish", () => {
+    let connection;
+    before((done) => {
+      connect("amqp://localhost", null, (err, conn) => {
+        if (err) return done(err);
+        connection = conn;
+        done();
+      });
+    });
+
+    it("ignores callback", async () => {
+      const channel = await connection.createChannel();
+      await channel.assertExchange("consume");
+      await channel.assertQueue("consume-q");
+      await channel.bindQueue("consume-q", "consume", "#");
+
+      return new Promise((resolve, reject) => {
+        channel.publish("consume", "test.1", Buffer.from("msg"), {type: "test"}, () => {
+          reject(new Error("Ignore callback"));
+        });
+        channel.consume("consume-q", resolve);
+      });
+    });
+
+    it("confirm channel calls callback when published", async () => {
+      const channel = await connection.createConfirmChannel();
+      await channel.assertExchange("consume");
+      await channel.assertQueue("consume-q");
+      await channel.bindQueue("consume-q", "consume", "#");
+
+      return new Promise((resolve) => {
+        channel.publish("consume", "test.1", Buffer.from(JSON.stringify({})), () => {
+          resolve();
+        });
+      });
+    });
+  });
+
+  describe("sendToQueue", () => {
+    let connection;
+    before((done) => {
+      connect("amqp://localhost", null, (err, conn) => {
+        if (err) return done(err);
+        connection = conn;
+        done();
+      });
+    });
+
+    it("breaks if message is not a buffer", async () => {
+      const channel = await connection.createChannel();
+      await channel.assertQueue("consume-q");
+      await channel.bindQueue("consume-q", "consume", "#");
+
+      expect(() => channel.sendToQueue("consume-q", {})).to.throw(/not a buffer/i);
+    });
+
+    it("ignores callback", async () => {
+      const channel = await connection.createChannel();
+      await channel.assertQueue("consume-q");
+      await channel.bindQueue("consume-q", "consume", "#");
+
+      return new Promise((resolve, reject) => {
+        channel.sendToQueue("consume-q", Buffer.from("msg"), () => {
+          reject(new Error("Ignore callback"));
+        });
+        channel.consume("consume-q", resolve);
+      });
+    });
+
+    it("confirm channel calls callback when sent", async () => {
+      const channel = await connection.createConfirmChannel();
+      await channel.assertQueue("consume-q");
+      await channel.bindQueue("consume-q", "consume", "#");
+
+      return new Promise((resolve) => {
+        channel.sendToQueue("consume-q", Buffer.from(JSON.stringify({})), () => {
+          resolve();
+        });
+      });
     });
   });
 
@@ -184,8 +266,8 @@ describe("fake amqplib", () => {
 
       await channel.bindQueue("frifras-q", "temp", "#");
 
-      await channel.publish("event", "test", {data: 1});
-      await channel.publish("temp", "test", {data: 2});
+      await channel.publish("event", "test", Buffer.from("msg1"));
+      await channel.publish("temp", "test", Buffer.from("msg2"));
 
       resetMock();
 
