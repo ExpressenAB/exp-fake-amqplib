@@ -53,7 +53,7 @@ function connect(url, options, connCallback) {
       function bindQueue(queue, exchange, key, args, bindCallback) {
         bindCallback = bindCallback || function () {};
         if (!exchanges[exchange]) return bindCallback("Bind to non-existing exchange " + exchange);
-        const re = "^" + key.replace(".", "\\.").replace("#", "(\\w|\\.)+").replace("*", "\\w+") + "$";
+        const re = "^" + key.replace(".", "\\.").replace("#", "(\\S)+").replace("*", "\\w+") + "$";
         exchanges[exchange].bindings.push({regex: new RegExp(re), queueName: queue});
         bindCallback();
       }
